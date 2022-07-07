@@ -91,43 +91,61 @@ mod tests {
 
     use super::*;
 
+    const CASES: [(&[u8], &[u8]); 4] = [
+        (b"hello", b"aGVsbG8"),
+        (b"John Doe", b"Sm9obiBEb2U"),
+        (b"\xF0\x9F\x8D\xA3", b"8J-Now"),
+        (
+            b"\xde\x9a\x4c\x32\x9e\x0d\x5b\xa8\x39\xed\x33\x5b\xe1\x9c\x01\xd9",
+            b"3ppMMp4NW6g57TNb4ZwB2Q",
+        ),
+    ];
+
     #[test]
     fn encode_test() {
-        let input = Cursor::new(b"hello");
-        let mut output = Vec::new();
-        encode(input, &mut output).unwrap();
-        assert_eq!(output, b"aGVsbG8");
+        for (raw, encoded) in CASES {
+            let input = Cursor::new(raw);
+            let mut output = Vec::new();
+            encode(input, &mut output).unwrap();
+            assert_eq!(output, encoded);
+        }
     }
 
     #[test]
     fn decode_test() {
-        let input = Cursor::new(b"aGVsbG8");
-        let mut output = Vec::new();
-        decode(input, &mut output).unwrap();
-        assert_eq!(output, b"hello");
+        for (raw, encoded) in CASES {
+            let input = Cursor::new(encoded);
+            let mut output = Vec::new();
+            decode(input, &mut output).unwrap();
+            assert_eq!(output, raw);
+        }
     }
 
     #[test]
     fn execute_stdin_encode_test() {
-        let stdin = Cursor::new(b"hello");
-        let mut stdout = Vec::new();
-        let args = Args {
-            decode: false,
-            file: FileKind::Stdin,
-        };
-        execute(stdin, &mut stdout, args).unwrap();
-        assert_eq!(stdout, b"aGVsbG8");
+        for (raw, encoded) in CASES {
+            let stdin = Cursor::new(raw);
+            let mut stdout = Vec::new();
+            let args = Args {
+                decode: false,
+                file: FileKind::Stdin,
+            };
+            execute(stdin, &mut stdout, args).unwrap();
+            assert_eq!(stdout, encoded);
+        }
     }
 
     #[test]
     fn execute_stdin_decode_test() {
-        let stdin = Cursor::new(b"aGVsbG8");
-        let mut stdout = Vec::new();
-        let args = Args {
-            decode: true,
-            file: FileKind::Stdin,
-        };
-        execute(stdin, &mut stdout, args).unwrap();
-        assert_eq!(stdout, b"hello");
+        for (raw, encoded) in CASES {
+            let stdin = Cursor::new(encoded);
+            let mut stdout = Vec::new();
+            let args = Args {
+                decode: true,
+                file: FileKind::Stdin,
+            };
+            execute(stdin, &mut stdout, args).unwrap();
+            assert_eq!(stdout, raw);
+        }
     }
 }
