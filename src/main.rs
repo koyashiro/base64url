@@ -115,9 +115,9 @@ mod tests {
     #[test]
     fn encode_test() {
         for (raw, encoded) in CASES {
-            let input = Cursor::new(raw);
+            let mut input = Cursor::new(raw);
             let mut output = Vec::new();
-            encode(input, &mut output).unwrap();
+            encode(&mut input, &mut output).unwrap();
             assert_eq!(output, encoded);
         }
     }
@@ -125,9 +125,9 @@ mod tests {
     #[test]
     fn decode_test() {
         for (raw, encoded) in CASES {
-            let input = Cursor::new(encoded);
+            let mut input = Cursor::new(encoded);
             let mut output = Vec::new();
-            decode(input, &mut output).unwrap();
+            decode(&mut input, &mut output).unwrap();
             assert_eq!(output, raw);
         }
     }
@@ -135,13 +135,13 @@ mod tests {
     #[test]
     fn execute_encode_none_input_test() {
         for (raw, encoded) in CASES {
-            let stdin = Cursor::new(raw);
+            let mut stdin = Cursor::new(raw);
             let mut stdout = Vec::new();
             let args = Args {
                 decode: false,
                 file: None,
             };
-            execute(stdin, &mut stdout, args).unwrap();
+            execute(&mut stdin, &mut stdout, args).unwrap();
             assert_eq!(stdout, encoded);
         }
     }
@@ -149,13 +149,13 @@ mod tests {
     #[test]
     fn execute_encode_stdin_input_test() {
         for (raw, encoded) in CASES {
-            let stdin = Cursor::new(raw);
+            let mut stdin = Cursor::new(raw);
             let mut stdout = Vec::new();
             let args = Args {
                 decode: false,
                 file: Some(FileKind::Stdin),
             };
-            execute(stdin, &mut stdout, args).unwrap();
+            execute(&mut stdin, &mut stdout, args).unwrap();
             assert_eq!(stdout, encoded);
         }
     }
@@ -163,7 +163,7 @@ mod tests {
     #[test]
     fn execute_encode_file_input_test() {
         for (raw, encoded) in CASES {
-            let stdin = Cursor::new(Vec::new());
+            let mut stdin = Cursor::new(Vec::new());
             let mut stdout = Vec::new();
             let tempfile = {
                 let mut f = NamedTempFile::new().unwrap();
@@ -176,7 +176,7 @@ mod tests {
                     file: Some(FileKind::PathBuf(tempfile.path().into())),
                 }
             };
-            execute(stdin, &mut stdout, args).unwrap();
+            execute(&mut stdin, &mut stdout, args).unwrap();
             assert_eq!(stdout, encoded);
         }
     }
@@ -184,13 +184,13 @@ mod tests {
     #[test]
     fn execute_decode_none_input_test() {
         for (raw, encoded) in CASES {
-            let stdin = Cursor::new(encoded);
+            let mut stdin = Cursor::new(encoded);
             let mut stdout = Vec::new();
             let args = Args {
                 decode: true,
                 file: None,
             };
-            execute(stdin, &mut stdout, args).unwrap();
+            execute(&mut stdin, &mut stdout, args).unwrap();
             assert_eq!(stdout, raw);
         }
     }
@@ -198,13 +198,13 @@ mod tests {
     #[test]
     fn execute_decode_stdin_input_test() {
         for (raw, encoded) in CASES {
-            let stdin = Cursor::new(encoded);
+            let mut stdin = Cursor::new(encoded);
             let mut stdout = Vec::new();
             let args = Args {
                 decode: true,
                 file: Some(FileKind::Stdin),
             };
-            execute(stdin, &mut stdout, args).unwrap();
+            execute(&mut stdin, &mut stdout, args).unwrap();
             assert_eq!(stdout, raw);
         }
     }
@@ -212,7 +212,7 @@ mod tests {
     #[test]
     fn execute_decode_file_input_test() {
         for (raw, encoded) in CASES {
-            let stdin = Cursor::new(Vec::new());
+            let mut stdin = Cursor::new(Vec::new());
             let mut stdout = Vec::new();
             let tempfile = {
                 let mut f = NamedTempFile::new().unwrap();
@@ -225,7 +225,7 @@ mod tests {
                     file: Some(FileKind::PathBuf(tempfile.path().into())),
                 }
             };
-            execute(stdin, &mut stdout, args).unwrap();
+            execute(&mut stdin, &mut stdout, args).unwrap();
             assert_eq!(stdout, raw);
         }
     }
