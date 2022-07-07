@@ -7,3 +7,6 @@ edition = "2021"
 anyhow = "1.0.58"
 base64-url = "1.4.13"
 clap = { version = "3.2.8", features = ["derive"] }
+
+[dev-dependencies]
+tempfile = "3.3.0"

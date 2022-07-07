@@ -89,6 +89,8 @@ fn main() -> anyhow::Result<()> {
 mod tests {
     use std::io::Cursor;
 
+    use tempfile::NamedTempFile;
+
     use super::*;
 
     const CASES: [(&[u8], &[u8]); 4] = [
@@ -122,7 +124,7 @@ mod tests {
     }
 
     #[test]
-    fn execute_stdin_encode_test() {
+    fn execute_encode_from_stdin_test() {
         for (raw, encoded) in CASES {
             let stdin = Cursor::new(raw);
             let mut stdout = Vec::new();
@@ -136,13 +138,55 @@ mod tests {
     }
 
     #[test]
-    fn execute_stdin_decode_test() {
+    fn execute_encode_from_file_test() {
+        for (raw, encoded) in CASES {
+            let stdin = Cursor::new(Vec::new());
+            let mut stdout = Vec::new();
+            let tempfile = {
+                let mut f = NamedTempFile::new().unwrap();
+                f.write_all(raw).unwrap();
+                f
+            };
+            let args = {
+                Args {
+                    decode: false,
+                    file: FileKind::PathBuf(tempfile.path().into()),
+                }
+            };
+            execute(stdin, &mut stdout, args).unwrap();
+            assert_eq!(stdout, encoded);
+        }
+    }
+
+    #[test]
+    fn execute_decode_from_stdin_test() {
         for (raw, encoded) in CASES {
             let stdin = Cursor::new(encoded);
             let mut stdout = Vec::new();
             let args = Args {
                 decode: true,
                 file: FileKind::Stdin,
+            };
+            execute(stdin, &mut stdout, args).unwrap();
+            assert_eq!(stdout, raw);
+        }
+    }
+
+    #[test]
+    fn execute_decode_from_file_test() {
+        for (raw, encoded) in CASES {
+            let stdin = Cursor::new(Vec::new());
+            let mut stdout = Vec::new();
+            let tempfile = {
+                let mut f = NamedTempFile::new().unwrap();
+                f.write_all(encoded).unwrap();
+                f
+            };
+            let args = {
+                Args {
+                    decode: true,
+                    file: FileKind::PathBuf(tempfile.path().into()),
+                }
             };
             execute(stdin, &mut stdout, args).unwrap();
             assert_eq!(stdout, raw);
