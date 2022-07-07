@@ -7,8 +7,6 @@ use std::{
 
 use clap::Parser;
 
-const STDIN: &str = "-";
-
 /// Base64url encode or decode FILE or standard input, to standard output.
 #[derive(Debug, Parser)]
 #[clap(about, author, version)]
@@ -42,7 +40,7 @@ impl FromStr for FileKind {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            STDIN => Ok(Self::Stdin),
+            "-" => Ok(Self::Stdin),
             _ => Ok(Self::PathBuf(s.try_into()?)),
         }
     }
