@@ -7,9 +7,8 @@ use std::{
 
 use clap::Parser;
 
-/// Base64url encode or decode FILE or standard input, to standard output.
 #[derive(Debug, Parser)]
-#[clap(about, author, version)]
+#[clap(about, version)]
 struct Args {
     /// Decode data.
     #[clap(long, short)]
