@@ -136,7 +136,21 @@ mod tests {
     }
 
     #[test]
-    fn execute_encode_from_stdin_test() {
+    fn execute_encode_none_input_test() {
+        for (raw, encoded) in CASES {
+            let stdin = Cursor::new(raw);
+            let mut stdout = Vec::new();
+            let args = Args {
+                decode: false,
+                file: None,
+            };
+            execute(stdin, &mut stdout, args).unwrap();
+            assert_eq!(stdout, encoded);
+        }
+    }
+
+    #[test]
+    fn execute_encode_stdin_input_test() {
         for (raw, encoded) in CASES {
             let stdin = Cursor::new(raw);
             let mut stdout = Vec::new();
@@ -150,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn execute_encode_from_file_test() {
+    fn execute_encode_file_input_test() {
         for (raw, encoded) in CASES {
             let stdin = Cursor::new(Vec::new());
             let mut stdout = Vec::new();
@@ -171,7 +185,21 @@ mod tests {
     }
 
     #[test]
-    fn execute_decode_from_stdin_test() {
+    fn execute_decode_none_input_test() {
+        for (raw, encoded) in CASES {
+            let stdin = Cursor::new(encoded);
+            let mut stdout = Vec::new();
+            let args = Args {
+                decode: true,
+                file: None,
+            };
+            execute(stdin, &mut stdout, args).unwrap();
+            assert_eq!(stdout, raw);
+        }
+    }
+
+    #[test]
+    fn execute_decode_stdin_input_test() {
         for (raw, encoded) in CASES {
             let stdin = Cursor::new(encoded);
             let mut stdout = Vec::new();
@@ -185,7 +213,7 @@ mod tests {
     }
 
     #[test]
-    fn execute_decode_from_file_test() {
+    fn execute_decode_file_input_test() {
         for (raw, encoded) in CASES {
             let stdin = Cursor::new(Vec::new());
             let mut stdout = Vec::new();
