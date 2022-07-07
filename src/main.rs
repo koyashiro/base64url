@@ -9,20 +9,32 @@ use clap::Parser;
 
 const STDIN: &str = "-";
 
+/// Base64url encode or decode FILE or standard input, to standard output.
 #[derive(Debug, Parser)]
 #[clap(about, author, version)]
 struct Args {
+    /// Decode data.
     #[clap(long, short)]
     decode: bool,
 
-    #[clap(default_value = STDIN, value_parser)]
-    file: FileKind,
+    /// With no FILE, or when FILE is -, read standard input.
+    #[clap(value_parser)]
+    file: Option<FileKind>,
 }
 
 #[derive(Clone, Debug)]
 enum FileKind {
     PathBuf(PathBuf),
     Stdin,
+}
+
+impl From<Option<FileKind>> for FileKind {
+    fn from(file_kind: Option<FileKind>) -> Self {
+        match file_kind {
+            Some(fk) => fk,
+            None => Self::Stdin,
+        }
+    }
 }
 
 impl FromStr for FileKind {
@@ -61,7 +73,7 @@ fn decode(mut input: impl Read, mut output: impl Write) -> anyhow::Result<()> {
 }
 
 fn execute(stdin: impl Read, stdout: impl Write, args: Args) -> anyhow::Result<()> {
-    let input = match args.file {
+    let input = match args.file.into() {
         FileKind::PathBuf(p) => Box::new(File::open(p)?) as Box<dyn Read>,
         FileKind::Stdin => Box::new(stdin) as Box<dyn Read>,
     };
@@ -130,7 +142,7 @@ mod tests {
             let mut stdout = Vec::new();
             let args = Args {
                 decode: false,
-                file: FileKind::Stdin,
+                file: Some(FileKind::Stdin),
             };
             execute(stdin, &mut stdout, args).unwrap();
             assert_eq!(stdout, encoded);
@@ -150,7 +162,7 @@ mod tests {
             let args = {
                 Args {
                     decode: false,
-                    file: FileKind::PathBuf(tempfile.path().into()),
+                    file: Some(FileKind::PathBuf(tempfile.path().into())),
                 }
             };
             execute(stdin, &mut stdout, args).unwrap();
@@ -165,7 +177,7 @@ mod tests {
             let mut stdout = Vec::new();
             let args = Args {
                 decode: true,
-                file: FileKind::Stdin,
+                file: Some(FileKind::Stdin),
             };
             execute(stdin, &mut stdout, args).unwrap();
             assert_eq!(stdout, raw);
@@ -185,7 +197,7 @@ mod tests {
             let args = {
                 Args {
                     decode: true,
-                    file: FileKind::PathBuf(tempfile.path().into()),
+                    file: Some(FileKind::PathBuf(tempfile.path().into())),
                 }
             };
             execute(stdin, &mut stdout, args).unwrap();
