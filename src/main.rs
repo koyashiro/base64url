@@ -102,155 +102,155 @@ mod tests {
 
     use super::*;
 
-    const ENCODE_CASES: [(&[u8], &[u8]); 8] = [
-        (b"hello", b"aGVsbG8\n"),
-        (b"hello\n", b"aGVsbG8K\n"),
-        (b"John Doe", b"Sm9obiBEb2U\n"),
-        (b"John Doe\n", b"Sm9obiBEb2UK\n"),
-        (b"\xF0\x9F\x8D\xA3", b"8J-Now\n"),
-        (b"\xF0\x9F\x8D\xA3\n", b"8J-Nowo\n"),
+    const ENCODE_TEST_CASES: [(&[u8], &[u8]); 8] = [
+        (b"hello", b"aGVsbG8"),
+        (b"hello\n", b"aGVsbG8K"),
+        (b"John Doe", b"Sm9obiBEb2U"),
+        (b"John Doe\n", b"Sm9obiBEb2UK"),
+        (b"\xF0\x9F\x8D\xA3", b"8J-Now"),
+        (b"\xF0\x9F\x8D\xA3\n", b"8J-Nowo"),
         (
             b"\xde\x9a\x4c\x32\x9e\x0d\x5b\xa8\x39\xed\x33\x5b\xe1\x9c\x01\xd9",
-            b"3ppMMp4NW6g57TNb4ZwB2Q\n",
+            b"3ppMMp4NW6g57TNb4ZwB2Q",
         ),
         (
             b"\xde\x9a\x4c\x32\x9e\x0d\x5b\xa8\x39\xed\x33\x5b\xe1\x9c\x01\xd9\n",
-            b"3ppMMp4NW6g57TNb4ZwB2Qo\n",
+            b"3ppMMp4NW6g57TNb4ZwB2Qo",
         ),
     ];
 
-    const DECODE_CASES: [(&[u8], &[u8]); 8] = [
-        (b"aGVsbG8", b"hello"),
-        (b"aGVsbG8\n", b"hello"),
-        (b"Sm9obiBEb2U", b"John Doe"),
-        (b"Sm9obiBEb2U\n", b"John Doe"),
-        (b"8J-Now", b"\xF0\x9F\x8D\xA3"),
-        (b"8J-Now\n", b"\xF0\x9F\x8D\xA3"),
-        (
-            b"3ppMMp4NW6g57TNb4ZwB2Q",
-            b"\xde\x9a\x4c\x32\x9e\x0d\x5b\xa8\x39\xed\x33\x5b\xe1\x9c\x01\xd9",
-        ),
-        (
-            b"3ppMMp4NW6g57TNb4ZwB2Q\n",
-            b"\xde\x9a\x4c\x32\x9e\x0d\x5b\xa8\x39\xed\x33\x5b\xe1\x9c\x01\xd9",
-        ),
-    ];
+    const TRAILING_WHITESPACES: [&[u8]; 7] = [b"", b" ", b"  ", b"   ", b"\n", b"\n\n", b"\n\n\n"];
 
-    #[test]
-    fn encode_test() {
-        for (raw, encoded) in ENCODE_CASES {
-            let mut input = Cursor::new(raw);
-            let mut output = Vec::new();
-            encode(&mut input, &mut output).unwrap();
-            assert_eq!(output, encoded);
+    #[cfg(test)]
+    mod encode {
+        use super::*;
+
+        #[test]
+        fn it_writes_encoded_bytes() {
+            for (raw, encoded) in ENCODE_TEST_CASES {
+                let mut input = Cursor::new(raw);
+                let mut output = Vec::new();
+                encode(&mut input, &mut output).unwrap();
+                assert_eq!(output, [encoded, b"\n"].concat());
+            }
         }
     }
 
-    #[test]
-    fn decode_test() {
-        for (encoded, raw) in DECODE_CASES {
-            let mut input = Cursor::new(encoded);
-            let mut output = Vec::new();
-            decode(&mut input, &mut output).unwrap();
-            assert_eq!(output, raw);
+    #[cfg(test)]
+    mod decode {
+        use super::*;
+
+        #[test]
+        fn it_writes_decoded_bytes() {
+            for (raw, encoded) in ENCODE_TEST_CASES {
+                let mut input = Cursor::new(encoded);
+                let mut output = Vec::new();
+                decode(&mut input, &mut output).unwrap();
+                assert_eq!(output, raw);
+            }
+        }
+
+        #[test]
+        fn it_ignores_trailing_whitespace() {
+            for trailing_whitespace in TRAILING_WHITESPACES {
+                for (raw, encoded) in ENCODE_TEST_CASES {
+                    let mut input = Cursor::new([encoded, trailing_whitespace].concat());
+                    let mut output = Vec::new();
+                    decode(&mut input, &mut output).unwrap();
+                    assert_eq!(output, raw);
+                }
+            }
         }
     }
 
-    #[test]
-    fn execute_encode_none_input_test() {
-        for (raw, encoded) in ENCODE_CASES {
-            let mut stdin = Cursor::new(raw);
-            let mut stdout = Vec::new();
-            let args = Args {
-                decode: false,
-                file: None,
-            };
-            execute(&mut stdin, &mut stdout, args).unwrap();
-            assert_eq!(stdout, encoded);
-        }
-    }
+    #[cfg(test)]
+    mod execute {
+        use super::*;
 
-    #[test]
-    fn execute_encode_stdin_input_test() {
-        for (raw, encoded) in ENCODE_CASES {
-            let mut stdin = Cursor::new(raw);
-            let mut stdout = Vec::new();
-            let args = Args {
-                decode: false,
-                file: Some(FileKind::Stdin),
-            };
-            execute(&mut stdin, &mut stdout, args).unwrap();
-            assert_eq!(stdout, encoded);
-        }
-    }
-
-    #[test]
-    fn execute_encode_file_input_test() {
-        for (raw, encoded) in ENCODE_CASES {
-            let mut stdin = Cursor::new(Vec::new());
-            let mut stdout = Vec::new();
-            let tempfile = {
-                let mut f = NamedTempFile::new().unwrap();
-                f.write_all(raw).unwrap();
-                f
-            };
-            let args = {
+        #[test]
+        fn it_encodes_standard_input() {
+            let argss = [
                 Args {
                     decode: false,
-                    file: Some(FileKind::PathBuf(tempfile.path().into())),
+                    file: None,
+                },
+                Args {
+                    decode: false,
+                    file: Some(FileKind::Stdin),
+                },
+            ];
+            for args in argss {
+                for (raw, encoded) in ENCODE_TEST_CASES {
+                    let mut stdin = Cursor::new(raw);
+                    let mut stdout = Vec::new();
+                    execute(&mut stdin, &mut stdout, &args).unwrap();
+                    assert_eq!(stdout, [encoded, b"\n"].concat());
                 }
-            };
-            execute(&mut stdin, &mut stdout, args).unwrap();
-            assert_eq!(stdout, encoded);
+            }
         }
-    }
 
-    #[test]
-    fn execute_decode_none_input_test() {
-        for (encoded, raw) in DECODE_CASES {
-            let mut stdin = Cursor::new(encoded);
-            let mut stdout = Vec::new();
-            let args = Args {
-                decode: true,
-                file: None,
-            };
-            execute(&mut stdin, &mut stdout, args).unwrap();
-            assert_eq!(stdout, raw);
+        #[test]
+        fn it_encode_file() {
+            for (raw, encoded) in ENCODE_TEST_CASES {
+                let mut stdin = Cursor::new(Vec::new());
+                let mut stdout = Vec::new();
+                let tempfile = {
+                    let mut f = NamedTempFile::new().unwrap();
+                    f.write_all(raw).unwrap();
+                    f
+                };
+                let args = {
+                    Args {
+                        decode: false,
+                        file: Some(FileKind::PathBuf(tempfile.path().into())),
+                    }
+                };
+                execute(&mut stdin, &mut stdout, &args).unwrap();
+                assert_eq!(stdout, [encoded, b"\n"].concat());
+            }
         }
-    }
 
-    #[test]
-    fn execute_decode_stdin_input_test() {
-        for (encoded, raw) in DECODE_CASES {
-            let mut stdin = Cursor::new(encoded);
-            let mut stdout = Vec::new();
-            let args = Args {
-                decode: true,
-                file: Some(FileKind::Stdin),
-            };
-            execute(&mut stdin, &mut stdout, args).unwrap();
-            assert_eq!(stdout, raw);
-        }
-    }
-
-    #[test]
-    fn execute_decode_file_input_test() {
-        for (encoded, raw) in DECODE_CASES {
-            let mut stdin = Cursor::new(Vec::new());
-            let mut stdout = Vec::new();
-            let tempfile = {
-                let mut f = NamedTempFile::new().unwrap();
-                f.write_all(encoded).unwrap();
-                f
-            };
-            let args = {
+        #[test]
+        fn it_decode_standard_input() {
+            let argss = [
                 Args {
                     decode: true,
-                    file: Some(FileKind::PathBuf(tempfile.path().into())),
+                    file: None,
+                },
+                Args {
+                    decode: true,
+                    file: Some(FileKind::Stdin),
+                },
+            ];
+            for args in argss {
+                for (raw, encoded) in ENCODE_TEST_CASES {
+                    let mut stdin = Cursor::new(encoded);
+                    let mut stdout = Vec::new();
+                    execute(&mut stdin, &mut stdout, &args).unwrap();
+                    assert_eq!(stdout, raw);
                 }
-            };
-            execute(&mut stdin, &mut stdout, args).unwrap();
-            assert_eq!(stdout, raw);
+            }
+        }
+
+        #[test]
+        fn it_decode_file() {
+            for (raw, encoded) in ENCODE_TEST_CASES {
+                let mut stdin = Cursor::new(Vec::new());
+                let mut stdout = Vec::new();
+                let tempfile = {
+                    let mut f = NamedTempFile::new().unwrap();
+                    f.write_all(encoded).unwrap();
+                    f
+                };
+                let args = {
+                    Args {
+                        decode: true,
+                        file: Some(FileKind::PathBuf(tempfile.path().into())),
+                    }
+                };
+                execute(&mut stdin, &mut stdout, &args).unwrap();
+                assert_eq!(stdout, raw);
+            }
         }
     }
 }
