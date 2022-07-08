@@ -51,7 +51,7 @@ fn encode(mut input: impl Read, mut output: impl Write) -> anyhow::Result<()> {
         input.read_to_end(&mut buf)?;
         buf
     };
-    let encoded = base64_url::encode(&decoded);
+    let encoded = base64::encode_config(&decoded, base64::URL_SAFE_NO_PAD);
 
     writeln!(output, "{encoded}")?;
 
@@ -62,7 +62,7 @@ fn decode(mut input: impl Read, mut output: impl Write) -> anyhow::Result<()> {
     let mut buf = String::new();
     input.read_to_string(&mut buf)?;
     let encoded = buf.trim_end();
-    let decoded = base64_url::decode(&encoded)?;
+    let decoded = base64::decode_config(&encoded, base64::URL_SAFE_NO_PAD)?;
 
     output.write_all(&decoded)?;
 
