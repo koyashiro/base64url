@@ -46,24 +46,24 @@ impl FromStr for FileKind {
 }
 
 fn encode(mut input: impl Read, mut output: impl Write) -> anyhow::Result<()> {
-    let input = {
+    let decoded = {
         let mut buf = Vec::new();
         input.read_to_end(&mut buf)?;
         buf
     };
-    let encoded = base64_url::encode(&input);
-    output.write_all(encoded.as_bytes())?;
+    let encoded = base64_url::encode(&decoded);
+
+    writeln!(output, "{encoded}")?;
 
     Ok(())
 }
 
 fn decode(mut input: impl Read, mut output: impl Write) -> anyhow::Result<()> {
-    let input = {
-        let mut buf = Vec::new();
-        input.read_to_end(&mut buf)?;
-        buf
-    };
-    let decoded = base64_url::decode(&input)?;
+    let mut buf = String::new();
+    input.read_to_string(&mut buf)?;
+    let encoded = buf.trim_end();
+    let decoded = base64_url::decode(&encoded)?;
+
     output.write_all(&decoded)?;
 
     Ok(())
