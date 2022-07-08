@@ -10,7 +10,7 @@ cargo install --git https://github.com/koyashiro/base64url
 
 ## Usage
 
-```sh
+```text
 Base64url encode or decode FILE or standard input, to standard output.
 
 USAGE:
