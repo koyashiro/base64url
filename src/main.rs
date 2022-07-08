@@ -102,19 +102,43 @@ mod tests {
 
     use super::*;
 
-    const CASES: [(&[u8], &[u8]); 4] = [
-        (b"hello", b"aGVsbG8"),
-        (b"John Doe", b"Sm9obiBEb2U"),
-        (b"\xF0\x9F\x8D\xA3", b"8J-Now"),
+    const ENCODE_CASES: [(&[u8], &[u8]); 8] = [
+        (b"hello", b"aGVsbG8\n"),
+        (b"hello\n", b"aGVsbG8K\n"),
+        (b"John Doe", b"Sm9obiBEb2U\n"),
+        (b"John Doe\n", b"Sm9obiBEb2UK\n"),
+        (b"\xF0\x9F\x8D\xA3", b"8J-Now\n"),
+        (b"\xF0\x9F\x8D\xA3\n", b"8J-Nowo\n"),
         (
             b"\xde\x9a\x4c\x32\x9e\x0d\x5b\xa8\x39\xed\x33\x5b\xe1\x9c\x01\xd9",
+            b"3ppMMp4NW6g57TNb4ZwB2Q\n",
+        ),
+        (
+            b"\xde\x9a\x4c\x32\x9e\x0d\x5b\xa8\x39\xed\x33\x5b\xe1\x9c\x01\xd9\n",
+            b"3ppMMp4NW6g57TNb4ZwB2Qo\n",
+        ),
+    ];
+
+    const DECODE_CASES: [(&[u8], &[u8]); 8] = [
+        (b"aGVsbG8", b"hello"),
+        (b"aGVsbG8\n", b"hello"),
+        (b"Sm9obiBEb2U", b"John Doe"),
+        (b"Sm9obiBEb2U\n", b"John Doe"),
+        (b"8J-Now", b"\xF0\x9F\x8D\xA3"),
+        (b"8J-Now\n", b"\xF0\x9F\x8D\xA3"),
+        (
             b"3ppMMp4NW6g57TNb4ZwB2Q",
+            b"\xde\x9a\x4c\x32\x9e\x0d\x5b\xa8\x39\xed\x33\x5b\xe1\x9c\x01\xd9",
+        ),
+        (
+            b"3ppMMp4NW6g57TNb4ZwB2Q\n",
+            b"\xde\x9a\x4c\x32\x9e\x0d\x5b\xa8\x39\xed\x33\x5b\xe1\x9c\x01\xd9",
         ),
     ];
 
     #[test]
     fn encode_test() {
-        for (raw, encoded) in CASES {
+        for (raw, encoded) in ENCODE_CASES {
             let mut input = Cursor::new(raw);
             let mut output = Vec::new();
             encode(&mut input, &mut output).unwrap();
@@ -124,7 +148,7 @@ mod tests {
 
     #[test]
     fn decode_test() {
-        for (raw, encoded) in CASES {
+        for (encoded, raw) in DECODE_CASES {
             let mut input = Cursor::new(encoded);
             let mut output = Vec::new();
             decode(&mut input, &mut output).unwrap();
@@ -134,7 +158,7 @@ mod tests {
 
     #[test]
     fn execute_encode_none_input_test() {
-        for (raw, encoded) in CASES {
+        for (raw, encoded) in ENCODE_CASES {
             let mut stdin = Cursor::new(raw);
             let mut stdout = Vec::new();
             let args = Args {
@@ -148,7 +172,7 @@ mod tests {
 
     #[test]
     fn execute_encode_stdin_input_test() {
-        for (raw, encoded) in CASES {
+        for (raw, encoded) in ENCODE_CASES {
             let mut stdin = Cursor::new(raw);
             let mut stdout = Vec::new();
             let args = Args {
@@ -162,7 +186,7 @@ mod tests {
 
     #[test]
     fn execute_encode_file_input_test() {
-        for (raw, encoded) in CASES {
+        for (raw, encoded) in ENCODE_CASES {
             let mut stdin = Cursor::new(Vec::new());
             let mut stdout = Vec::new();
             let tempfile = {
@@ -183,7 +207,7 @@ mod tests {
 
     #[test]
     fn execute_decode_none_input_test() {
-        for (raw, encoded) in CASES {
+        for (encoded, raw) in DECODE_CASES {
             let mut stdin = Cursor::new(encoded);
             let mut stdout = Vec::new();
             let args = Args {
@@ -197,7 +221,7 @@ mod tests {
 
     #[test]
     fn execute_decode_stdin_input_test() {
-        for (raw, encoded) in CASES {
+        for (encoded, raw) in DECODE_CASES {
             let mut stdin = Cursor::new(encoded);
             let mut stdout = Vec::new();
             let args = Args {
@@ -211,7 +235,7 @@ mod tests {
 
     #[test]
     fn execute_decode_file_input_test() {
-        for (raw, encoded) in CASES {
+        for (encoded, raw) in DECODE_CASES {
             let mut stdin = Cursor::new(Vec::new());
             let mut stdout = Vec::new();
             let tempfile = {
