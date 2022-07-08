@@ -69,10 +69,10 @@ fn decode(mut input: impl Read, mut output: impl Write) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn execute(stdin: impl Read, stdout: impl Write, args: Args) -> anyhow::Result<()> {
-    let input = match args.file.into() {
-        FileKind::PathBuf(p) => Box::new(File::open(p)?) as Box<dyn Read>,
-        FileKind::Stdin => Box::new(stdin) as Box<dyn Read>,
+fn execute(stdin: impl Read, stdout: impl Write, args: &Args) -> anyhow::Result<()> {
+    let input = match &args.file {
+        Some(FileKind::PathBuf(p)) => Box::new(File::open(p)?) as Box<dyn Read>,
+        None | Some(FileKind::Stdin) => Box::new(stdin) as Box<dyn Read>,
     };
 
     if args.decode {
@@ -85,11 +85,11 @@ fn execute(stdin: impl Read, stdout: impl Write, args: Args) -> anyhow::Result<(
 }
 
 fn main() -> anyhow::Result<()> {
-    let stdin = stdin();
-    let stdout = stdout();
+    let mut stdin = stdin();
+    let mut stdout = stdout();
     let args = Args::parse();
 
-    execute(stdin, stdout, args)?;
+    execute(&mut stdin, &mut stdout, &args)?;
 
     Ok(())
 }
