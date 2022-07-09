@@ -72,15 +72,22 @@ fn decode(mut input: impl Read, mut output: impl Write) -> Result<(), anyhow::Er
 }
 
 fn execute(stdin: impl Read, stdout: impl Write, args: &Args) -> Result<(), anyhow::Error> {
-    let input = match &args.file {
-        Some(FileKind::PathBuf(p)) => Box::new(File::open(p)?) as Box<dyn Read>,
-        None | Some(FileKind::Stdin) => Box::new(stdin) as Box<dyn Read>,
-    };
-
-    if args.decode {
-        decode(input, stdout)?;
-    } else {
-        encode(input, stdout)?;
+    match &args.file {
+        Some(FileKind::PathBuf(p)) => {
+            let file = File::open(p)?;
+            if args.decode {
+                decode(file, stdout)?;
+            } else {
+                encode(file, stdout)?;
+            }
+        }
+        None | Some(FileKind::Stdin) => {
+            if args.decode {
+                decode(stdin, stdout)?;
+            } else {
+                encode(stdin, stdout)?;
+            }
+        }
     }
 
     Ok(())
