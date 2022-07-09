@@ -132,7 +132,7 @@ mod tests {
             for (raw, encoded) in ENCODE_TEST_CASES {
                 let mut input = Cursor::new(raw);
                 let mut output = Vec::new();
-                encode(&mut input, &mut output).unwrap();
+                assert!(encode(&mut input, &mut output).is_ok());
                 assert_eq!(output, [encoded, b"\n"].concat());
             }
         }
@@ -147,7 +147,7 @@ mod tests {
             for (raw, encoded) in ENCODE_TEST_CASES {
                 let mut input = Cursor::new(encoded);
                 let mut output = Vec::new();
-                decode(&mut input, &mut output).unwrap();
+                assert!(decode(&mut input, &mut output).is_ok());
                 assert_eq!(output, raw);
             }
         }
@@ -158,7 +158,7 @@ mod tests {
                 for (raw, encoded) in ENCODE_TEST_CASES {
                     let mut input = Cursor::new([encoded, trailing_whitespace].concat());
                     let mut output = Vec::new();
-                    decode(&mut input, &mut output).unwrap();
+                    assert!(decode(&mut input, &mut output).is_ok());
                     assert_eq!(output, raw);
                 }
             }
@@ -185,7 +185,7 @@ mod tests {
                 for (raw, encoded) in ENCODE_TEST_CASES {
                     let mut stdin = Cursor::new(raw);
                     let mut stdout = Vec::new();
-                    execute(&mut stdin, &mut stdout, &args).unwrap();
+                    assert!(execute(&mut stdin, &mut stdout, &args).is_ok());
                     assert_eq!(stdout, [encoded, b"\n"].concat());
                 }
             }
@@ -207,7 +207,7 @@ mod tests {
                         file: Some(FileKind::PathBuf(tempfile.path().into())),
                     }
                 };
-                execute(&mut stdin, &mut stdout, &args).unwrap();
+                assert!(execute(&mut stdin, &mut stdout, &args).is_ok());
                 assert_eq!(stdout, [encoded, b"\n"].concat());
             }
         }
@@ -228,7 +228,7 @@ mod tests {
                 for (raw, encoded) in ENCODE_TEST_CASES {
                     let mut stdin = Cursor::new(encoded);
                     let mut stdout = Vec::new();
-                    execute(&mut stdin, &mut stdout, &args).unwrap();
+                    assert!(execute(&mut stdin, &mut stdout, &args).is_ok());
                     assert_eq!(stdout, raw);
                 }
             }
@@ -250,7 +250,7 @@ mod tests {
                         file: Some(FileKind::PathBuf(tempfile.path().into())),
                     }
                 };
-                execute(&mut stdin, &mut stdout, &args).unwrap();
+                assert!(execute(&mut stdin, &mut stdout, &args).is_ok());
                 assert_eq!(stdout, raw);
             }
         }
