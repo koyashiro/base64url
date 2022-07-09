@@ -6,6 +6,7 @@ use std::{
     str::FromStr,
 };
 
+use base64::{decode_config, encode_config, URL_SAFE_NO_PAD};
 use clap::Parser;
 
 #[derive(Debug, Parser)]
@@ -46,31 +47,31 @@ impl FromStr for FileKind {
     }
 }
 
-fn encode(mut input: impl Read, mut output: impl Write) -> anyhow::Result<()> {
+fn encode(mut input: impl Read, mut output: impl Write) -> Result<(), anyhow::Error> {
     let decoded = {
         let mut buf = Vec::new();
         input.read_to_end(&mut buf)?;
         buf
     };
-    let encoded = base64::encode_config(&decoded, base64::URL_SAFE_NO_PAD);
+    let encoded = encode_config(&decoded, URL_SAFE_NO_PAD);
 
     writeln!(output, "{encoded}")?;
 
     Ok(())
 }
 
-fn decode(mut input: impl Read, mut output: impl Write) -> anyhow::Result<()> {
+fn decode(mut input: impl Read, mut output: impl Write) -> Result<(), anyhow::Error> {
     let mut buf = String::new();
     input.read_to_string(&mut buf)?;
     let encoded = buf.trim_end();
-    let decoded = base64::decode_config(&encoded, base64::URL_SAFE_NO_PAD)?;
+    let decoded = decode_config(&encoded, URL_SAFE_NO_PAD)?;
 
     output.write_all(&decoded)?;
 
     Ok(())
 }
 
-fn execute(stdin: impl Read, stdout: impl Write, args: &Args) -> anyhow::Result<()> {
+fn execute(stdin: impl Read, stdout: impl Write, args: &Args) -> Result<(), anyhow::Error> {
     let input = match &args.file {
         Some(FileKind::PathBuf(p)) => Box::new(File::open(p)?) as Box<dyn Read>,
         None | Some(FileKind::Stdin) => Box::new(stdin) as Box<dyn Read>,
@@ -85,7 +86,7 @@ fn execute(stdin: impl Read, stdout: impl Write, args: &Args) -> anyhow::Result<
     Ok(())
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<(), anyhow::Error> {
     let mut stdin = stdin();
     let mut stdout = stdout();
     let args = Args::parse();
