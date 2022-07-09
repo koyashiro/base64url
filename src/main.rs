@@ -1,13 +1,12 @@
 use std::{
-    convert::Infallible,
     fs::File,
-    io::{stdin, stdout, Read, Write},
-    path::PathBuf,
-    str::FromStr,
+    io::{stdin, stdout, BufReader, Read, Write},
 };
 
 use base64::{decode_config, encode_config, URL_SAFE_NO_PAD};
 use clap::Parser;
+
+const STDIN: &str = "-";
 
 #[derive(Debug, Parser)]
 #[clap(about, version)]
@@ -18,33 +17,7 @@ struct Args {
 
     /// With no FILE, or when FILE is -, read standard input.
     #[clap(value_parser)]
-    file: Option<FileKind>,
-}
-
-#[derive(Clone, Debug)]
-enum FileKind {
-    PathBuf(PathBuf),
-    Stdin,
-}
-
-impl From<Option<FileKind>> for FileKind {
-    fn from(file_kind: Option<FileKind>) -> Self {
-        match file_kind {
-            Some(fk) => fk,
-            None => Self::Stdin,
-        }
-    }
-}
-
-impl FromStr for FileKind {
-    type Err = Infallible;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "-" => Ok(Self::Stdin),
-            _ => Ok(Self::PathBuf(s.into())),
-        }
-    }
+    file: Option<String>,
 }
 
 fn encode(mut input: impl Read, mut output: impl Write) -> Result<(), anyhow::Error> {
@@ -72,20 +45,22 @@ fn decode(mut input: impl Read, mut output: impl Write) -> Result<(), anyhow::Er
 }
 
 fn execute(stdin: impl Read, stdout: impl Write, args: &Args) -> Result<(), anyhow::Error> {
-    match &args.file {
-        Some(FileKind::PathBuf(p)) => {
-            let file = File::open(p)?;
-            if args.decode {
-                decode(file, stdout)?;
-            } else {
-                encode(file, stdout)?;
-            }
-        }
-        None | Some(FileKind::Stdin) => {
+    match args.file.as_deref() {
+        // From standard input
+        Some(STDIN) | None => {
             if args.decode {
                 decode(stdin, stdout)?;
             } else {
                 encode(stdin, stdout)?;
+            }
+        }
+        // From FILE
+        Some(p) => {
+            let file = BufReader::new(File::open(p)?);
+            if args.decode {
+                decode(file, stdout)?;
+            } else {
+                encode(file, stdout)?;
             }
         }
     }
@@ -181,11 +156,11 @@ mod tests {
             let argss = [
                 Args {
                     decode: false,
-                    file: None,
+                    file: Some("-".to_string()),
                 },
                 Args {
                     decode: false,
-                    file: Some(FileKind::Stdin),
+                    file: None,
                 },
             ];
             for args in argss {
@@ -211,7 +186,7 @@ mod tests {
                 let args = {
                     Args {
                         decode: false,
-                        file: Some(FileKind::PathBuf(tempfile.path().into())),
+                        file: Some(tempfile.path().display().to_string()),
                     }
                 };
                 assert!(execute(&mut stdin, &mut stdout, &args).is_ok());
@@ -224,11 +199,11 @@ mod tests {
             let argss = [
                 Args {
                     decode: true,
-                    file: None,
+                    file: Some("-".to_string()),
                 },
                 Args {
                     decode: true,
-                    file: Some(FileKind::Stdin),
+                    file: None,
                 },
             ];
             for args in argss {
@@ -254,7 +229,7 @@ mod tests {
                 let args = {
                     Args {
                         decode: true,
-                        file: Some(FileKind::PathBuf(tempfile.path().into())),
+                        file: Some(tempfile.path().display().to_string()),
                     }
                 };
                 assert!(execute(&mut stdin, &mut stdout, &args).is_ok());
