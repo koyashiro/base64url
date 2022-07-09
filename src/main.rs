@@ -1,4 +1,5 @@
 use std::{
+    convert::Infallible,
     fs::File,
     io::{stdin, stdout, Read, Write},
     path::PathBuf,
@@ -35,12 +36,12 @@ impl From<Option<FileKind>> for FileKind {
 }
 
 impl FromStr for FileKind {
-    type Err = anyhow::Error;
+    type Err = Infallible;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "-" => Ok(Self::Stdin),
-            _ => Ok(Self::PathBuf(s.try_into()?)),
+            _ => Ok(Self::PathBuf(s.into())),
         }
     }
 }
