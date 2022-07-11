@@ -10,7 +10,8 @@ cargo install --git https://github.com/koyashiro/base64url
 
 ## Usage
 
-```text
+```console
+$ base64url --help
 Base64url encode or decode FILE or standard input, to standard output.
 
 USAGE:
@@ -29,15 +30,15 @@ OPTIONS:
 
 Encode string.
 
-```sh
-echo -n hello | base64url
+```console
+$ echo -n hello | base64url
 aGVsbG8
 ```
 
 Encode binary.
 
-```sh
-head -c 16 /dev/random | base64url
+```console
+$ head -c 16 /dev/random | base64url
 6tp3BcfXk8-ku2eeSH6-7w
 ```
 
@@ -45,15 +46,15 @@ head -c 16 /dev/random | base64url
 
 Decode to string.
 
-```sh
-echo -n aGVsbG8 | base64url -d
+```console
+$ echo -n aGVsbG8 | base64url -d
 hello
 ```
 
 Decode to binary.
 
-```sh
-echo -n 6tp3BcfXk8-ku2eeSH6-7w | base64url -d | hexdump
+```console
+$ echo -n 6tp3BcfXk8-ku2eeSH6-7w | base64url -d | hexdump
 0000000 daea 0577 d7c7 cf93 bba4 9e67 7e48 efbe
 0000010
 ```
