@@ -2,7 +2,17 @@ name: CI
 
 on:
   push:
+    paths:
+      - .github/workflows/ci.yml
+      - src/**
+      - Cargo.lock
+      - Cargo.toml
   pull_request:
+    paths:
+      - .github/workflows/ci.yml
+      - src/**
+      - Cargo.lock
+      - Cargo.toml
 
 jobs:
   fmt:
