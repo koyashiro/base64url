@@ -1,5 +1,7 @@
 # base64url
 
+[![CI](https://github.com/koyashiro/base64url/actions/workflows/ci.yml/badge.svg)](https://github.com/koyashiro/base64url/actions/workflows/ci.yml)
+
 Base64url encode or decode FILE or standard input, to standard output.
 
 ## Install
