@@ -4,6 +4,12 @@ version = "0.1.0"
 authors = ["koyashiro <develop@koyashi.ro>"]
 edition = "2021"
 description = "Base64url encode or decode FILE or standard input, to standard output."
+readme = "README.md"
+homepage = "https://github.com/koyashiro/base64url"
+repository = "https://github.com/koyashiro/base64url"
+license = "MIT"
+keywords = ["base64", "base64url"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0.58"
