@@ -6,10 +6,124 @@ on:
       - v[0-9]+.[0-9]+.[0-9]+
 
 jobs:
-  release:
+  parse-release-version:
     runs-on: ubuntu-latest
     steps:
-      - name: Release
+      - run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_ENV"
+    outputs:
+      release_version: ${{ env.RELEASE_VERSION }}
+
+  release:
+    name: release (${{ matrix.job.target }})
+    runs-on: ${{ matrix.job.os }}
+    needs: ["parse-release-version"]
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - { target: aarch64-apple-darwin,           os: macos-latest }
+          - { target: aarch64-pc-windows-msvc,        os: windows-latest }
+          - { target: aarch64-unknown-linux-gnu,      os: ubuntu-latest }
+          - { target: aarch64-unknown-linux-musl,     os: ubuntu-latest }
+          - { target: arm-unknown-linux-gnueabi,      os: ubuntu-latest }
+          - { target: arm-unknown-linux-gnueabihf,    os: ubuntu-latest }
+          - { target: arm-unknown-linux-musleabi,     os: ubuntu-latest }
+          - { target: arm-unknown-linux-musleabihf,   os: ubuntu-latest }
+          - { target: armv7-unknown-linux-gnueabi,    os: ubuntu-latest }
+          - { target: armv7-unknown-linux-gnueabihf,  os: ubuntu-latest }
+          - { target: armv7-unknown-linux-musleabi,   os: ubuntu-latest }
+          - { target: armv7-unknown-linux-musleabihf, os: ubuntu-latest }
+          # - { target: i686-apple-darwin,              os: macos-latest }
+          # - { target: i686-pc-windows-gnu,            os: windows-latest }
+          - { target: i686-pc-windows-msvc,           os: windows-latest }
+          - { target: i686-unknown-linux-gnu,         os: ubuntu-latest }
+          - { target: i686-unknown-linux-musl,        os: ubuntu-latest }
+          - { target: x86_64-apple-darwin,            os: macos-latest }
+          - { target: x86_64-pc-windows-gnu,          os: windows-latest }
+          - { target: x86_64-pc-windows-msvc,         os: windows-latest }
+          - { target: x86_64-unknown-linux-gnu,       os: ubuntu-latest }
+          - { target: x86_64-unknown-linux-musl,      os: ubuntu-latest }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.job.target }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.job.target }}
+          override: true
+          profile: minimal
+      - name: Install binutils
+        shell: bash
+        run: |
+          case ${{ matrix.job.target }} in
+            aarch64-unknown-linux-*) sudo apt-get update -y && sudo apt-get install -y binutils-aarch64-linux-gnu ;;
+            arm*-unknown-linux-*eabi) sudo apt-get update -y && sudo apt-get install -y binutils-arm-linux-gnueabi ;;
+            arm*-unknown-linux-*eabihf) sudo apt-get update -y && sudo apt-get install -y binutils-arm-linux-gnueabihf ;;
+            i686-unknown-linux-*) sudo apt-get update -y && sudo apt-get install binutils-i686-gnu ;;
+          esac
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: ${{ matrix.job.os == 'ubuntu-latest' }}
+          command: build
+          args: --locked --release --target=${{ matrix.job.target }}
+      - name: Archive
+        id: archive
+        shell: bash
+        run: |
+          # Set $BIN_NAME
+          case ${{ matrix.job.target }} in
+            *-pc-windows-*) BIN_NAME_SUFFIX='.exe' ;;
+            *) BIN_NAME_SUFFIX='' ;;
+          esac
+          BIN_NAME="base64url${BIN_NAME_SUFFIX}"
+
+          cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" .
+
+          # Set $STRIP
+          case ${{ matrix.job.target }} in
+            aarch64-unknown-linux-*) STRIP='aarch64-linux-gnu-strip' ;;
+            arm*-unknown-linux-*eabi) STRIP='arm-linux-gnueabi-strip' ;;
+            arm*-unknown-linux-*eabihf) STRIP='arm-linux-gnueabihf-strip' ;;
+            i686-unknown-linux-*) STRIP='i686-gnu-strip' ;;
+            *-pc-windows-*) STRIP='' ;;
+            *) STRIP='strip' ;;
+          esac
+
+          # Strip
+          if [ -n "${STRIP}" ]; then
+            "${STRIP}" base64url
+          fi
+
+          # Set $ARCHIVE_PATH
+          ARCHIVE_BASENAME='base64url-${{ needs.parse-release-version.outputs.release_version }}-${{ matrix.job.target }}'
+          case ${{ matrix.job.target }} in
+            *-pc-windows-*) ARCHIVE_SUFFIX='.zip' ;;
+            *) ARCHIVE_SUFFIX='.tar.gz' ;;
+          esac
+          ARCHIVE_PATH="${ARCHIVE_BASENAME}${ARCHIVE_SUFFIX}"
+
+          # Create archive
+          case ${{ matrix.job.target }} in
+            *-pc-windows-*) 7z a "${ARCHIVE_PATH}" "${BIN_NAME}" LICENSE README.md ;;
+            *) tar -czf "${ARCHIVE_PATH}" "${BIN_NAME}" LICENSE README.md ;;
+          esac
+
+          echo "ARCHIVE_PATH=${ARCHIVE_PATH}" >> "$GITHUB_ENV"
+      - name: Publish release
         uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.ARCHIVE_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
