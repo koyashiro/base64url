@@ -48,7 +48,7 @@ jobs:
           args: -- --deny warnings
 
   build:
-    name: build on ${{ matrix.job.os }} (${{ matrix.job.target }})
+    name: build (${{ matrix.job.target }})
     runs-on: ${{ matrix.job.os }}
     strategy:
       fail-fast: false

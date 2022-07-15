@@ -63,15 +63,6 @@ jobs:
           target: ${{ matrix.job.target }}
           override: true
           profile: minimal
-      - name: Install binutils
-        shell: bash
-        run: |
-          case ${{ matrix.job.target }} in
-            aarch64-unknown-linux-*) sudo apt-get update -y && sudo apt-get install -y binutils-aarch64-linux-gnu ;;
-            arm*-unknown-linux-*eabi) sudo apt-get update -y && sudo apt-get install -y binutils-arm-linux-gnueabi ;;
-            arm*-unknown-linux-*eabihf) sudo apt-get update -y && sudo apt-get install -y binutils-arm-linux-gnueabihf ;;
-            i686-unknown-linux-*) sudo apt-get update -y && sudo apt-get install binutils-i686-gnu ;;
-          esac
       - name: Build
         uses: actions-rs/cargo@v1
         with:
@@ -90,21 +81,6 @@ jobs:
           BIN_NAME="base64url${BIN_NAME_SUFFIX}"
 
           cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" .
-
-          # Set $STRIP
-          case ${{ matrix.job.target }} in
-            aarch64-unknown-linux-*) STRIP='aarch64-linux-gnu-strip' ;;
-            arm*-unknown-linux-*eabi) STRIP='arm-linux-gnueabi-strip' ;;
-            arm*-unknown-linux-*eabihf) STRIP='arm-linux-gnueabihf-strip' ;;
-            i686-unknown-linux-*) STRIP='i686-gnu-strip' ;;
-            *-pc-windows-*) STRIP='' ;;
-            *) STRIP='strip' ;;
-          esac
-
-          # Strip
-          if [ -n "${STRIP}" ]; then
-            "${STRIP}" base64url
-          fi
 
           # Set $ARCHIVE_PATH
           ARCHIVE_BASENAME='base64url-${{ needs.parse-release-version.outputs.release_version }}-${{ matrix.job.target }}'
