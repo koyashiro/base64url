@@ -6,17 +6,9 @@ on:
       - v[0-9]+.[0-9]+.[0-9]+
 
 jobs:
-  parse-release-version:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_ENV"
-    outputs:
-      release_version: ${{ env.RELEASE_VERSION }}
-
   release:
     name: release (${{ matrix.job.target }})
     runs-on: ${{ matrix.job.os }}
-    needs: ["parse-release-version"]
     strategy:
       fail-fast: false
       matrix:
@@ -83,7 +75,8 @@ jobs:
           cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" .
 
           # Set $ARCHIVE_PATH
-          ARCHIVE_BASENAME='base64url-${{ needs.parse-release-version.outputs.release_version }}-${{ matrix.job.target }}'
+          RELEASE_VERSION="${GITHUB_REF#refs/tags/v}"
+          ARCHIVE_BASENAME="base64url-${RELEASE_VERSION}-${{ matrix.job.target }}"
           case ${{ matrix.job.target }} in
             *-pc-windows-*) ARCHIVE_SUFFIX='.zip' ;;
             *) ARCHIVE_SUFFIX='.tar.gz' ;;
