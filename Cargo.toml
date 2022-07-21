@@ -14,7 +14,7 @@ categories = ["command-line-utilities"]
 [dependencies]
 anyhow = "1.0.58"
 base64 = "0.13.0"
-clap = { version = "3.2.13", features = ["derive"] }
+clap = { version = "3.2.14", features = ["derive"] }
 
 [dev-dependencies]
 tempfile = "3.3.0"
