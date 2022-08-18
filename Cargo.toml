@@ -1,6 +1,6 @@
 [package]
 name = "base64url"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["koyashiro <develop@koyashi.ro>"]
 edition = "2021"
 description = "Base64url encode or decode FILE or standard input, to standard output."
