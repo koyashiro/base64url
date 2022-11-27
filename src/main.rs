@@ -37,7 +37,7 @@ fn decode(mut input: impl Read, mut output: impl Write) -> Result<(), anyhow::Er
     let mut buf = String::new();
     input.read_to_string(&mut buf)?;
     let encoded = buf.trim_end();
-    let decoded = decode_config(&encoded, URL_SAFE_NO_PAD)?;
+    let decoded = decode_config(encoded, URL_SAFE_NO_PAD)?;
 
     output.write_all(&decoded)?;
 
