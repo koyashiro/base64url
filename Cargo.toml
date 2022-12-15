@@ -13,7 +13,7 @@ categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0.66"
-base64 = "0.13.1"
+base64 = "0.20.0"
 clap = { version = "4.0.29", features = ["derive"] }
 
 [dev-dependencies]
