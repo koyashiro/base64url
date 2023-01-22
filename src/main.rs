@@ -31,7 +31,7 @@ fn encode(mut input: impl Read, mut output: impl Write) -> Result<(), anyhow::Er
         input.read_to_end(&mut buf)?;
         buf
     };
-    let encoded = encode_engine(&decoded, &URL_SAFE_NO_PAD_ENGINE);
+    let encoded = encode_engine(decoded.as_slice(), &URL_SAFE_NO_PAD_ENGINE);
 
     writeln!(output, "{encoded}")?;
 
