@@ -5,13 +5,13 @@ use std::{
 
 use base64::{
     alphabet::URL_SAFE,
-    decode_engine, encode_engine,
-    engine::fast_portable::{FastPortable, NO_PAD},
+    engine::general_purpose::{GeneralPurpose, NO_PAD},
+    Engine,
 };
 use clap::Parser;
 
 const STDIN: &str = "-";
-const URL_SAFE_NO_PAD_ENGINE: FastPortable = FastPortable::from(&URL_SAFE, NO_PAD);
+const URL_SAFE_NO_PAD_ENGINE: GeneralPurpose = GeneralPurpose::new(&URL_SAFE, NO_PAD);
 
 #[derive(Debug, Parser)]
 #[clap(about, version)]
@@ -31,7 +31,7 @@ fn encode(mut input: impl Read, mut output: impl Write) -> Result<(), anyhow::Er
         input.read_to_end(&mut buf)?;
         buf
     };
-    let encoded = encode_engine(decoded.as_slice(), &URL_SAFE_NO_PAD_ENGINE);
+    let encoded = URL_SAFE_NO_PAD_ENGINE.encode(decoded.as_slice());
 
     writeln!(output, "{encoded}")?;
 
@@ -42,7 +42,7 @@ fn decode(mut input: impl Read, mut output: impl Write) -> Result<(), anyhow::Er
     let mut buf = String::new();
     input.read_to_string(&mut buf)?;
     let encoded = buf.trim_end();
-    let decoded = decode_engine(encoded, &URL_SAFE_NO_PAD_ENGINE)?;
+    let decoded = URL_SAFE_NO_PAD_ENGINE.decode(encoded)?;
 
     output.write_all(&decoded)?;
 
