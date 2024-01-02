@@ -12,7 +12,7 @@ keywords = ["base64", "base64url"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-anyhow = "1.0.77"
+anyhow = "1.0.79"
 base64 = "0.21.5"
 clap = { version = "4.4.12", features = ["derive"] }
 
