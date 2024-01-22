@@ -7,7 +7,7 @@ description = "Base64url encode or decode FILE or standard input, to standard ou
 readme = "README.md"
 homepage = "https://github.com/koyashiro/base64url"
 repository = "https://github.com/koyashiro/base64url"
-license = "MIT"
+license = "MIT OR Appach-2.0"
 keywords = ["base64", "base64url"]
 categories = ["command-line-utilities"]
 
